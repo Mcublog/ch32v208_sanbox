@@ -1,0 +1,4 @@
+# Скрипт прошивки, генерируется CMake для каждой цели.
+# Запуск: scripts/flash.sh <target>.openocd  (см. scripts/env.sh)
+adapter speed 6000
+program {@CMAKE_BINARY_DIR@/output/@target@.hex} verify reset exit

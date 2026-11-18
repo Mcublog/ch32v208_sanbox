@@ -1,0 +1,20 @@
+{
+    "C_Cpp.errorSquiggles": "enabled",
+    "doxdocgen.generic.authorEmail": "viacheslav@mcublog.ru",
+    "doxdocgen.generic.authorName": "Viacheslav",
+    "doxdocgen.file.copyrightTag": [
+        "@copyright Viacheslav mcublog (c) {year}"
+    ],
+    "C_Cpp.clang_format_fallbackStyle": "{BasedOnStyle: Microsoft, ColumnLimit: 90, IndentWidth: 4, ColumnLimit: 0}",
+    "diffEditor.ignoreTrimWhitespace": false,
+    "conventionalCommits.scopes": [
+        "mcu",
+        "desktop",
+        "hwtest",
+        "libs",
+        "docs"
+    ],
+    "cmake.generator": "Unix Makefiles",
+    "cmake.configureOnOpen": false,
+    "task.autoDetect": "off"
+}

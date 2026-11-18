@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [ develop, master, main ]
+  pull_request:
+
+jobs:
+  test-job:
+    # Host-тесты; EVT нужен только для конфигурации общего списка целей.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: CMake version
+        run: cmake --version
+      - name: GCC version
+        run: gcc --version
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc
+      - name: Build and Run Tests
+        run: cmake --build build --target common_types_test && ctest --test-dir build --output-on-failure

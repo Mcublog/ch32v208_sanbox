@@ -1,0 +1,105 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cmake",
+            "label": "CMake: build active target",
+            "command": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "type": "cmake",
+            "label": "CMake: clean rebuild active",
+            "command": "cleanRebuild",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "Flash: MCU target",
+            "command": "${workspaceFolder}/scripts/flash.sh",
+            "args": [
+                "${input:mcuTarget}"
+            ],
+            "group": "test",
+            "presentation": {
+                "reveal": "always"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "OpenOCD: gdb server",
+            "command": "${workspaceFolder}/scripts/gdb_server.sh",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "gdb-server",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/.vscode/tasks.json"
+                ],
+                "pattern": [
+                    {
+                        "regexp": "^(Error)\\s*:\\s*(.*)$",
+                        "file": 1,
+                        "message": 2
+                    }
+                ],
+                "severity": "error",
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^\\[gdb-server\\]|^Info\\s*:\\s*starting gdb server",
+                    "endsPattern": "Listening on port [0-9]+ for gdb connections"
+                }
+            },
+
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": false
+            }
+        },
+        {
+            "type": "shell",
+            "label": "OpenOCD: stop gdb server",
+            "command": "${workspaceFolder}/scripts/gdb_server.sh",
+            "args": [
+                "--stop"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Delete: build dirs",
+            "type": "shell",
+            "linux": {
+                "command": "rm",
+                "args": [
+                    "-rf",
+                    "build",
+                    "build-riscv"
+                ]
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "mcuTarget",
+            "type": "promptString",
+            "description": "Имя MCU-цели",
+            "default": "hwtest_gpio_toggle"
+        }
+    ]
+}

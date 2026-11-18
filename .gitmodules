@@ -1,0 +1,4 @@
+[submodule "libs/third_party/wch/ch32v20x"]
+	path = libs/third_party/wch/ch32v20x
+	url = https://github.com/openwch/ch32v20x.git
+	shallow = true
