@@ -101,8 +101,41 @@ scripts/flash.sh build-riscv/output/hwtest_gpio_toggle.elf
 `MRS_GCC_DEBUGGER`, которую выставляет `scripts/env.sh`, и цепляется к
 gdb-серверу OpenOCD на `localhost:3333`. Перед запуском VS Code выполняет
 фоновую задачу `OpenOCD: gdb server`, которая запускает
-`scripts/gdb_server.sh`. Прошейте нужный ELF, запустите VS Code из оболочки
-после `source scripts/env.sh` и выберите конфигурацию.
+`scripts/gdb_server.sh`. Запустите VS Code из оболочки после
+`source scripts/env.sh` и выберите конфигурацию.
+
+Сервер можно поднять и вручную — с прошивкой цели или без неё:
+
+```sh
+scripts/gdb_server.sh                                        # только gdb-сервер
+scripts/gdb_server.sh --flash build-riscv/hwtest/gpio_toggle/hwtest_gpio_toggle.openocd
+scripts/gdb_server.sh --stop                                 # остановить сервер
+```
+
+Имя MCU-цели вручную не вводится: `Debug: MCU (WCH-LinkE)` и задача
+`Flash: MCU target` берут путь из активной launch target CMake Tools
+(`${command:cmake.launchTargetPath}`), как в `ws407_sandbox`. Поэтому в
+статус-баре CMake Tools должен быть выбран build-каталог `build-riscv`
+и нужная цель (например, `hwtest_gpio_toggle`). При активном host-каталоге
+`build` эти конфигурации будут работать с host-целью, а не с прошивкой.
+
+Перед отладкой плата прошивается автоматически той же целью, ELF которой
+загрузит отладчик: задача `OpenOCD: gdb server` вызывает
+`scripts/gdb_server.sh --flash ${command:cmake.launchTargetPath}.openocd`.
+Скрипт останавливает ранее запущенный OpenOCD (WCH-LinkE доступен только
+одному процессу, иначе прошивка падает с `claim interface failed`), прошивает
+цель через `scripts/flash.sh` с `verify` и затем поднимает gdb-сервер. Поэтому
+после пересборки или смены цели достаточно нажать Debug — прошивка в чипе
+не разойдётся с загруженным ELF.
+
+Отладчик сбрасывает MCU программно через SDI (`reset_config none separate`
+в `wch-riscv.cfg`): `reset halt` выполняется самим OpenOCD при старте сервера,
+поэтому PC гарантированно стоит на `_start`, а `cppdbg` со `stopAtEntry`
+останавливается в `main`. Команда `monitor reset halt` в `launch.json`
+оставлена как best effort: `setupCommands` выполняются до подключения к
+удалённой цели и на этом этапе gdb отвечает `"monitor" command not supported`,
+поэтому у неё стоит `ignoreFailures`. Линия `NRST` на `P6` не выведена и не
+нужна, отдельный провод RST подключать не требуется.
 
 `scripts/gdb_server.sh` не поднимает второй экземпляр OpenOCD, если порт 3333
 уже слушается (сервер остался после предыдущей сессии отладки): в этом случае
@@ -134,7 +167,9 @@ echo "$MRS_GCC_DEBUGGER"
 
 Предупреждение OpenOCD `Prefer GDB command "target extended-remote :3333"
 instead of "target remote :3333"` безвредно: `cppdbg` подключается через
-`target remote`, а прошивка выполняется отдельно, через `scripts/flash.sh`.
+`target remote`, а прошивка выполняется задачей отладки через
+`scripts/flash.sh` (при необходимости сервер можно поднять и без прошивки:
+`scripts/gdb_server.sh`).
 
 ### Лог через SDI
 
@@ -148,8 +183,12 @@ wlink flash --enable-sdi-print --watch-serial build-riscv/output/hwtest_sdi_prin
 ```
 
 Без активного приёмника логов реализация WCH может заблокировать `printf`,
-поэтому не запускайте эту прошивку «в пустоту». SDI print в `wlink` требует
-прошивку пробы 2.10+. См. также штатный пример
+поэтому не запускайте эту прошивку «в пустоту». В отладчике это выглядит как
+«зависание» сразу после старта: `_write` крутится в
+`while (*DEBUG_DATA0_ADDRESS != 0)`, PC стоит на месте, а LED не мигает.
+Для проверки LED и SysTick используйте `hwtest_gpio_toggle` (лог через USART1),
+а `hwtest_sdi_printf` отлаживайте только вместе с приёмником. SDI print
+в `wlink` требует прошивку пробы 2.10+. См. также штатный пример
 [`SDI_Printf`](https://github.com/openwch/ch32v20x/tree/main/EVT/EXAM/SDI_Printf)
 и WCH-LinkUtility.
 

@@ -28,7 +28,9 @@
             "name": "Debug: MCU (WCH-LinkE)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build-riscv/output/${input:mcuTarget}.elf",
+            // Путь берётся из активной launch target CMake Tools
+            // (build-каталог build-riscv + выбранная цель в статус-баре).
+            "program": "${command:cmake.launchTargetPath}",
             "cwd": "${workspaceFolder}",
             "MIMode": "gdb",
             "miDebuggerPath": "${env:MRS_GCC_DEBUGGER}",
@@ -43,19 +45,16 @@
                     "ignoreFailures": true
                 },
                 {
-                    "description": "Reset and halt",
+                    // setupCommands выполняются до подключения к удалённой
+                    // цели, поэтому monitor здесь отвечает "not supported".
+                    // Реальный reset halt делает сам OpenOCD при старте
+                    // (scripts/gdb_server.sh), команда оставлена на случай,
+                    // если cppdbg когда-нибудь выполнит её после connect.
+                    "description": "Reset and halt (best effort)",
                     "text": "monitor reset halt",
                     "ignoreFailures": true
                 }
             ]
-        }
-    ],
-    "inputs": [
-        {
-            "id": "mcuTarget",
-            "type": "promptString",
-            "description": "Имя MCU-цели",
-            "default": "hwtest_gpio_toggle"
         }
     ]
 }

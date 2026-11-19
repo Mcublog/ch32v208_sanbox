@@ -38,6 +38,11 @@ function(ch32v208_post_build target)
     configure_file(${PROJECT_SOURCE_DIR}/config/burn.openocd.in
         ${CMAKE_BINARY_DIR}/${target}.openocd
         @ONLY)
+    # Копия рядом с исполняемым файлом: по образцу ws407 (.jlink) путь
+    # ${command:cmake.launchTargetPath}.openocd разрешается из VS Code.
+    configure_file(${PROJECT_SOURCE_DIR}/config/burn.openocd.in
+        ${CMAKE_CURRENT_BINARY_DIR}/${target}.openocd
+        @ONLY)
 endfunction()
 
 function(get_git_hash hash_value)

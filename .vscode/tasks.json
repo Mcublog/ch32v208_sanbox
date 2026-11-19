@@ -26,7 +26,9 @@
             "label": "Flash: MCU target",
             "command": "${workspaceFolder}/scripts/flash.sh",
             "args": [
-                "${input:mcuTarget}"
+                // .openocd генерируется CMake рядом с исполняемым файлом цели,
+                // поэтому путь берётся из активной launch target CMake Tools.
+                "${command:cmake.launchTargetPath}.openocd"
             ],
             "group": "test",
             "presentation": {
@@ -37,28 +39,31 @@
             "type": "shell",
             "label": "OpenOCD: gdb server",
             "command": "${workspaceFolder}/scripts/gdb_server.sh",
+            "args": [
+                // Перед отладкой прошиваем ту же цель, что загрузит отладчик.
+                // Скрипт сначала останавливает старый OpenOCD (WCH-LinkE занят
+                // эксклюзивно), затем flash.sh с verify, затем поднимает сервер.
+                "--flash",
+                "${command:cmake.launchTargetPath}.openocd"
+            ],
             "isBackground": true,
             "problemMatcher": {
-                "owner": "gdb-server",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceFolder}/.vscode/tasks.json"
-                ],
+                "owner": "openocd",
+                "fileLocation": ["relative", "${workspaceFolder}"],
                 "pattern": [
                     {
-                        "regexp": "^(Error)\\s*:\\s*(.*)$",
+                        "regexp": "^(Error) : (.*)$",
                         "file": 1,
-                        "message": 2
+                        "message": 2,
+                        "kind": "file"
                     }
                 ],
-                "severity": "error",
                 "background": {
                     "activeOnStart": true,
-                    "beginsPattern": "^\\[gdb-server\\]|^Info\\s*:\\s*starting gdb server",
+                    "beginsPattern": "^\\[gdb-server\\]|^Info : starting gdb server",
                     "endsPattern": "Listening on port [0-9]+ for gdb connections"
                 }
             },
-
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated",
@@ -92,14 +97,6 @@
             "presentation": {
                 "reveal": "silent"
             }
-        }
-    ],
-    "inputs": [
-        {
-            "id": "mcuTarget",
-            "type": "promptString",
-            "description": "Имя MCU-цели",
-            "default": "hwtest_gpio_toggle"
         }
     ]
 }
